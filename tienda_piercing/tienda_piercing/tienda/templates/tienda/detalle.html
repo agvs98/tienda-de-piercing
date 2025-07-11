@@ -1,0 +1,400 @@
+{% extends 'tienda/base.html' %}
+
+{% block title %}{{ producto.nombre }} - Tienda de Piercing{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="bg-light py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'tienda:inicio' %}">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'tienda:productos' %}">Productos</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'tienda:productos' %}?categoria={{ producto.categoria.id }}">{{ producto.categoria.nombre }}</a></li>
+                <li class="breadcrumb-item active">{{ producto.nombre }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Imagen del Producto -->
+        <div class="col-lg-6 mb-4">
+            <div class="product-image-container">
+                {% if producto.imagen %}
+                    <img src="{{ producto.imagen.url }}" 
+                         class="img-fluid rounded shadow-lg" 
+                         alt="{{ producto.nombre }}"
+                         id="mainImage">
+                {% else %}
+                    <div class="bg-light rounded shadow-lg d-flex align-items-center justify-content-center" 
+                         style="height: 500px;">
+                        <i class="fas fa-image fa-10x text-muted"></i>
+                    </div>
+                {% endif %}
+                
+                <!-- Galería de imágenes (placeholder) -->
+                <div class="row mt-3">
+                    <div class="col-3">
+                        <img src="https://via.placeholder.com/100x100?text=Img+1" 
+                             class="img-fluid rounded thumbnail-image" 
+                             alt="Imagen 1">
+                    </div>
+                    <div class="col-3">
+                        <img src="https://via.placeholder.com/100x100?text=Img+2" 
+                             class="img-fluid rounded thumbnail-image" 
+                             alt="Imagen 2">
+                    </div>
+                    <div class="col-3">
+                        <img src="https://via.placeholder.com/100x100?text=Img+3" 
+                             class="img-fluid rounded thumbnail-image" 
+                             alt="Imagen 3">
+                    </div>
+                    <div class="col-3">
+                        <img src="https://via.placeholder.com/100x100?text=Img+4" 
+                             class="img-fluid rounded thumbnail-image" 
+                             alt="Imagen 4">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información del Producto -->
+        <div class="col-lg-6">
+            <div class="product-info">
+                <h1 class="display-5 fw-bold mb-3">{{ producto.nombre }}</h1>
+                
+                <div class="mb-3">
+                    <span class="badge bg-primary fs-6">{{ producto.categoria.nombre }}</span>
+                </div>
+                
+                <div class="mb-4">
+                    <span class="display-4 text-primary fw-bold">${{ producto.precio }}</span>
+                </div>
+                
+                <div class="mb-4">
+                    {% if producto.stock > 0 %}
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-check"></i> En Stock ({{ producto.stock }} disponibles)
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">
+                            <i class="fas fa-times"></i> Agotado
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <h5>Descripción</h5>
+                    <p class="lead">{{ producto.descripcion }}</p>
+                </div>
+                
+                <!-- Opciones del Producto -->
+                <div class="mb-4">
+                    <h5>Opciones</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cantidad</label>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control text-center" value="1" min="1" max="{{ producto.stock }}" id="quantity">
+                                <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Material</label>
+                            <select class="form-select">
+                                <option>Acero Quirúrgico</option>
+                                <option>Titanio</option>
+                                <option>Oro 14k</option>
+                                <option>Plata 925</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botones de Acción -->
+                <div class="d-grid gap-2 d-md-flex mb-4">
+                    {% if producto.stock > 0 %}
+                        <button class="btn btn-primary btn-lg flex-fill" 
+                                onclick="addToCartDetailed()">
+                            <i class="fas fa-cart-plus"></i> Añadir al Carrito
+                        </button>
+                        <button class="btn btn-success btn-lg flex-fill">
+                            <i class="fas fa-credit-card"></i> Comprar Ahora
+                        </button>
+                    {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-ban"></i> No Disponible
+                        </button>
+                    {% endif %}
+                    <button class="btn btn-outline-danger btn-lg" onclick="toggleWishlist()">
+                        <i class="far fa-heart" id="wishlistIcon"></i>
+                    </button>
+                </div>
+                
+                <!-- Información Adicional -->
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Información del Producto</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-truck text-primary"></i> Envío gratis en pedidos superiores a $50</li>
+                            <li><i class="fas fa-undo text-primary"></i> Devoluciones gratuitas en 30 días</li>
+                            <li><i class="fas fa-shield-alt text-primary"></i> Garantía de calidad</li>
+                            <li><i class="fas fa-certificate text-primary"></i> Certificado de autenticidad</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs de Información -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button">
+                        Descripción Detallada
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications" type="button">
+                        Especificaciones
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="care-tab" data-bs-toggle="tab" data-bs-target="#care" type="button">
+                        Cuidados
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button">
+                        Reseñas (5)
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="productTabsContent">
+                <div class="tab-pane fade show active" id="description" role="tabpanel">
+                    <div class="p-4">
+                        <h5>Descripción Completa</h5>
+                        <p>{{ producto.descripcion }}</p>
+                        <p>Este piercing de alta calidad está diseñado para brindar comodidad y estilo. Fabricado con materiales premium que garantizan durabilidad y seguridad para el uso diario.</p>
+                        
+                        <h6>Características Principales:</h6>
+                        <ul>
+                            <li>Material hipoalergénico</li>
+                            <li>Diseño ergonómico</li>
+                            <li>Fácil de limpiar</li>
+                            <li>Resistente a la corrosión</li>
+                            <li>Acabado pulido profesional</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="specifications" role="tabpanel">
+                    <div class="p-4">
+                        <h5>Especificaciones Técnicas</h5>
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Material:</strong></td>
+                                    <td>Acero Quirúrgico 316L</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Calibre:</strong></td>
+                                    <td>16G (1.2mm)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Longitud:</strong></td>
+                                    <td>8mm</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Acabado:</strong></td>
+                                    <td>Pulido espejo</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Certificación:</strong></td>
+                                    <td>CE, FDA</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Origen:</strong></td>
+                                    <td>Fabricado en Alemania</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="care" role="tabpanel">
+                    <div class="p-4">
+                        <h5>Instrucciones de Cuidado</h5>
+                        
+                        <h6>Limpieza Diaria:</h6>
+                        <ul>
+                            <li>Lava tus manos antes de tocar el piercing</li>
+                            <li>Limpia con solución salina 2-3 veces al día</li>
+                            <li>Evita el uso de alcohol o peróxido</li>
+                            <li>Seca suavemente con una toalla limpia</li>
+                        </ul>
+                        
+                        <h6>Qué Evitar:</h6>
+                        <ul>
+                            <li>No toques el piercing con las manos sucias</li>
+                            <li>Evita nadar en piscinas o jacuzzis</li>
+                            <li>No uses productos con fragancias</li>
+                            <li>Evita dormir sobre el piercing</li>
+                        </ul>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Importante:</strong> Si experimentas dolor, enrojecimiento excesivo o secreción, consulta a un profesional de la salud.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                    <div class="p-4">
+                        <h5>Reseñas de Clientes</h5>
+                        
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="me-4">
+                                <span class="display-6 fw-bold">4.8</span>
+                                <div class="text-warning">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <small class="text-muted">Basado en 5 reseñas</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Reseñas individuales -->
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <strong>María G.</strong>
+                                <div class="ms-auto text-warning">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                            <p>Excelente calidad, muy cómodo de usar. El envío fue rápido y el empaque perfecto.</p>
+                            <small class="text-muted">Hace 2 semanas</small>
+                        </div>
+                        
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <strong>Carlos R.</strong>
+                                <div class="ms-auto text-warning">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                            </div>
+                            <p>Muy buen producto, aunque esperaba que fuera un poco más grande. Aún así, lo recomiendo.</p>
+                            <small class="text-muted">Hace 1 mes</small>
+                        </div>
+                        
+                        <button class="btn btn-outline-primary">Ver Todas las Reseñas</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function increaseQuantity() {
+        const quantityInput = document.getElementById('quantity');
+        const currentValue = parseInt(quantityInput.value);
+        const maxValue = parseInt(quantityInput.max);
+        
+        if (currentValue < maxValue) {
+            quantityInput.value = currentValue + 1;
+        }
+    }
+    
+    function decreaseQuantity() {
+        const quantityInput = document.getElementById('quantity');
+        const currentValue = parseInt(quantityInput.value);
+        
+        if (currentValue > 1) {
+            quantityInput.value = currentValue - 1;
+        }
+    }
+    
+    function addToCartDetailed() {
+        const quantity = document.getElementById('quantity').value;
+        addToCart({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }}, quantity);
+    }
+    
+    function toggleWishlist() {
+        const icon = document.getElementById('wishlistIcon');
+        if (icon.classList.contains('far')) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            icon.parentElement.classList.remove('btn-outline-danger');
+            icon.parentElement.classList.add('btn-danger');
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            icon.parentElement.classList.remove('btn-danger');
+            icon.parentElement.classList.add('btn-outline-danger');
+        }
+    }
+    
+    // Galería de imágenes
+    document.querySelectorAll('.thumbnail-image').forEach(img => {
+        img.addEventListener('click', function() {
+            document.getElementById('mainImage').src = this.src;
+        });
+    });
+</script>
+
+<style>
+    .thumbnail-image {
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+    }
+    
+    .thumbnail-image:hover {
+        opacity: 0.8;
+    }
+    
+    .product-image-container img {
+        max-height: 500px;
+        object-fit: cover;
+    }
+    
+    .nav-tabs .nav-link {
+        color: #666;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #e91e63;
+        border-color: #e91e63 #e91e63 #fff;
+    }
+    
+    .input-group .btn {
+        border-color: #ced4da;
+    }
+    
+    .input-group .form-control:focus {
+        border-color: #e91e63;
+        box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+    }
+</style>
+{% endblock %}

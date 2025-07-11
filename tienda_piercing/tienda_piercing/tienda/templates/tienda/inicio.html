@@ -1,0 +1,174 @@
+{% extends 'tienda/base.html' %}
+
+{% block title %}Inicio - Tienda de Piercing{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold">Descubre tu Estilo Único</h1>
+                <p class="lead">Encuentra los mejores piercings de alta calidad. Desde clásicos hasta diseños exclusivos.</p>
+                <a href="{% url 'tienda:productos' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-shopping-bag"></i> Ver Productos
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-gem fa-10x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categorías -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Nuestras Categorías</h2>
+        <div class="row">
+            {% for categoria in categorias %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 category-card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-star fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">{{ categoria.nombre }}</h5>
+                            <p class="card-text">{{ categoria.descripcion }}</p>
+                            <a href="{% url 'tienda:productos' %}?categoria={{ categoria.id }}" class="btn btn-primary">
+                                Ver Productos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> No hay categorías disponibles en este momento.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Productos Destacados -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Productos Destacados</h2>
+        <div class="row">
+            {% for producto in productos %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card product-card h-100">
+                        {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ producto.nombre }}</h5>
+                            <p class="card-text text-muted">{{ producto.descripcion|truncatewords:10 }}</p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 text-primary mb-0">${{ producto.precio }}</span>
+                                    <span class="badge bg-secondary">Stock: {{ producto.stock }}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <a href="{% url 'tienda:detalle' producto.id %}" class="btn btn-primary btn-sm">
+                                        Ver Detalles
+                                    </a>
+                                    <button class="btn btn-outline-primary btn-sm" 
+                                            onclick="addToCart({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> No hay productos disponibles en este momento.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'tienda:productos' %}" class="btn btn-primary btn-lg">
+                Ver Todos los Productos
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 text-center mb-4">
+                <div class="feature-icon">
+                    <i class="fas fa-shipping-fast fa-3x text-primary mb-3"></i>
+                </div>
+                <h5>Envío Rápido</h5>
+                <p>Recibe tu pedido en 24-48 horas</p>
+            </div>
+            <div class="col-md-4 text-center mb-4">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                </div>
+                <h5>Calidad Garantizada</h5>
+                <p>Todos nuestros productos son de alta calidad</p>
+            </div>
+            <div class="col-md-4 text-center mb-4">
+                <div class="feature-icon">
+                    <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                </div>
+                <h5>Soporte 24/7</h5>
+                <p>Estamos aquí para ayudarte cuando lo necesites</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #e91e63, #9c27b0);
+        color: white;
+        padding: 100px 0;
+    }
+    
+    .category-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-icon:hover {
+        transform: scale(1.1);
+    }
+    
+    .product-card {
+        transition: transform 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}

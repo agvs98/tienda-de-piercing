@@ -1,0 +1,260 @@
+{% extends 'tienda/base.html' %}
+
+{% block title %}Productos - Tienda de Piercing{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-primary text-white py-4">
+    <div class="container">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-gem"></i> Nuestros Productos
+        </h1>
+        <p class="lead mb-0">Descubre nuestra amplia selección de piercings</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar de Filtros -->
+        <div class="col-lg-3 mb-4">
+            <div class="category-filter">
+                <h5 class="mb-3">
+                    <i class="fas fa-filter"></i> Filtrar por Categoría
+                </h5>
+                
+                <div class="list-group">
+                    <a href="{% url 'tienda:productos' %}" 
+                       class="list-group-item list-group-item-action {% if not request.GET.categoria %}active{% endif %}">
+                        <i class="fas fa-th-large"></i> Todos los Productos
+                    </a>
+                    
+                    {% for categoria in categorias %}
+                        <a href="{% url 'tienda:productos' %}?categoria={{ categoria.id }}" 
+                           class="list-group-item list-group-item-action {% if request.GET.categoria == categoria.id|stringformat:'s' %}active{% endif %}">
+                            <i class="fas fa-star"></i> {{ categoria.nombre }}
+                        </a>
+                    {% endfor %}
+                </div>
+                
+                <!-- Filtros adicionales -->
+                <div class="mt-4">
+                    <h6>Rango de Precios</h6>
+                    <div class="mb-3">
+                        <input type="range" class="form-range" min="0" max="1000" value="500" id="priceRange">
+                        <div class="d-flex justify-content-between">
+                            <small>$0</small>
+                            <small>$1000</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Disponibilidad</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="inStock" checked>
+                        <label class="form-check-label" for="inStock">
+                            Solo productos en stock
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Productos -->
+        <div class="col-lg-9">
+            <!-- Barra de herramientas -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="text-muted">
+                        Mostrando {{ productos|length }} productos
+                    </span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <label class="form-label me-2 mb-0">Ordenar por:</label>
+                    <select class="form-select" style="width: auto;" id="sortSelect">
+                        <option value="name">Nombre</option>
+                        <option value="price_low">Precio: Menor a Mayor</option>
+                        <option value="price_high">Precio: Mayor a Menor</option>
+                        <option value="newest">Más Recientes</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Grid de Productos -->
+            <div class="row" id="productGrid">
+                {% for producto in productos %}
+                    <div class="col-md-6 col-lg-4 mb-4 product-item" 
+                         data-price="{{ producto.precio }}" 
+                         data-name="{{ producto.nombre|lower }}"
+                         data-stock="{{ producto.stock }}">
+                        <div class="card product-card h-100">
+                            {% if producto.imagen %}
+                                <img src="{{ producto.imagen.url }}" 
+                                     class="card-img-top" 
+                                     alt="{{ producto.nombre }}" 
+                                     style="height: 250px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                     style="height: 250px;">
+                                    <i class="fas fa-image fa-4x text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ producto.nombre }}</h5>
+                                <p class="card-text text-muted">
+                                    {{ producto.descripcion|truncatewords:15 }}
+                                </p>
+                                <div class="mb-2">
+                                    <span class="badge bg-secondary">{{ producto.categoria.nombre }}</span>
+                                </div>
+                                
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="h4 text-primary mb-0">${{ producto.precio }}</span>
+                                        <div>
+                                            {% if producto.stock > 0 %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Disponible ({{ producto.stock }})
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times"></i> Agotado
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'tienda:detalle' producto.id %}" 
+                                           class="btn btn-primary">
+                                            <i class="fas fa-eye"></i> Ver Detalles
+                                        </a>
+                                        {% if producto.stock > 0 %}
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="addToCart({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
+                                                <i class="fas fa-cart-plus"></i> Añadir al Carrito
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-outline-secondary" disabled>
+                                                <i class="fas fa-ban"></i> No Disponible
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <h4>No se encontraron productos</h4>
+                            <p>No hay productos disponibles en esta categoría.</p>
+                            <a href="{% url 'tienda:productos' %}" class="btn btn-primary">
+                                Ver Todos los Productos
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Paginación (si es necesaria) -->
+            {% if productos %}
+                <nav aria-label="Paginación de productos">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item">
+                            <a class="page-link" href="#" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#" aria-label="Siguiente">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Funcionalidad de filtrado y ordenación
+    document.getElementById('sortSelect').addEventListener('change', function() {
+        const sortBy = this.value;
+        const productGrid = document.getElementById('productGrid');
+        const products = Array.from(productGrid.querySelectorAll('.product-item'));
+        
+        products.sort((a, b) => {
+            switch(sortBy) {
+                case 'name':
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                case 'price_low':
+                    return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                case 'price_high':
+                    return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                default:
+                    return 0;
+            }
+        });
+        
+        products.forEach(product => productGrid.appendChild(product));
+    });
+    
+    // Filtro de precio
+    document.getElementById('priceRange').addEventListener('input', function() {
+        const maxPrice = parseFloat(this.value);
+        const products = document.querySelectorAll('.product-item');
+        
+        products.forEach(product => {
+            const productPrice = parseFloat(product.dataset.price);
+            product.style.display = productPrice <= maxPrice ? 'block' : 'none';
+        });
+    });
+    
+    // Filtro de stock
+    document.getElementById('inStock').addEventListener('change', function() {
+        const showOnlyInStock = this.checked;
+        const products = document.querySelectorAll('.product-item');
+        
+        products.forEach(product => {
+            const stock = parseInt(product.dataset.stock);
+            if (showOnlyInStock && stock === 0) {
+                product.style.display = 'none';
+            } else if (!showOnlyInStock) {
+                product.style.display = 'block';
+            }
+        });
+    });
+</script>
+
+<style>
+    .product-item {
+        transition: all 0.3s ease;
+    }
+    
+    .list-group-item {
+        border: none;
+        border-radius: 8px !important;
+        margin-bottom: 5px;
+    }
+    
+    .list-group-item.active {
+        background-color: #e91e63;
+        border-color: #e91e63;
+    }
+    
+    .form-range::-webkit-slider-thumb {
+        background: #e91e63;
+    }
+    
+    .form-range::-moz-range-thumb {
+        background: #e91e63;
+    }
+</style>
+{% endblock %}
